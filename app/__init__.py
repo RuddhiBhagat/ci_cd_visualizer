@@ -8,6 +8,8 @@ def create_app():
 
     app = Flask(__name__)
 
+    app.secret_key = os.getenv("SECRET_KEY", "supersecret")
+
     # Register routes from routes.py
     from .routes import bp as routes_bp
     app.register_blueprint(routes_bp)

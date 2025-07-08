@@ -4,7 +4,84 @@
     <title>CI/CD Dashboard</title>
 </head>
 <body>
-    <h1>Welcome to Your CI/CD Visualizer</h1>
-    <p>This is the starting page. Flask is working!</p>
+    <h1>GitHub Workflows</h1>
+
+    <a href="{{ url_for('routes.stats') }}">
+    <button style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px;">
+        View Statistics
+    </button>
+</a>
+
+    <!-- Repo Selector Form -->
+    <form method="post" action="{{ url_for('routes.home') }}">
+        <label for="repo">Select Repository:</label>
+        <select name="repo" onchange="this.form.submit()">
+            {% for repo in repositories %}
+                <option value="{{ repo.name }}" {% if repo.name == selected_repo %}selected{% endif %}>
+                    {{ repo.full_name }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+        {% for category, message in messages %}
+          <li><strong>{{ category }}:</strong> {{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Workflow List -->
+    {% if workflows %}
+        <ul>
+        {% for wf in workflows %}
+            <li>
+                <strong>{{ wf.name }}</strong> (ID: {{ wf.id }})
+                <form action="{{ url_for('routes.trigger', workflow_id=wf.id) }}" method="post" style="display:inline;">
+                    <input type="hidden" name="repo" value="{{ selected_repo }}">
+                    <button type="submit">Trigger</button>
+                </form>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No workflows found for this repository.</p>
+    {% endif %}
+
+    <hr>
+    <h2>Recent Workflow Runs</h2>
+
+    {% if workflow_runs %}
+    <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Workflow</th>
+                <th>Run ID</th>
+                <th>Status</th>
+                <th>Conclusion</th>
+                <th>Triggered By</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for run in workflow_runs %}
+            <tr>
+                <td>{{ run.name }}</td>
+                <td><a href="{{ run.html_url }}" target="_blank">{{ run.id }}</a></td>
+                <td>{{ run.status }}</td>
+                <td>{{ run.conclusion or "pending" }}</td>
+                <td>{{ run.triggering_actor.login }}</td>
+                <td>{{ run.created_at }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No workflow runs found for this repository.</p>
+    {% endif %}
 </body>
 </html>

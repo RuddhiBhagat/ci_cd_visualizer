@@ -28,3 +28,16 @@ jobs:
 
     - name: Run Dummy Test
       run: echo "All tests passed!"
+
+    - name: Log Build Result
+  run: |
+    curl -X POST https://cicdvisualizer-production.up.railway.app/api/log-build \
+         -H "Content-Type: application/json" \
+         -d '{
+               "workflow_name": "Python App CI",
+               "run_id": ${{ github.run_id }},
+               "status": "completed",
+               "conclusion": "${{ job.status }}",
+               "triggered_by": "manual"
+             }'
+

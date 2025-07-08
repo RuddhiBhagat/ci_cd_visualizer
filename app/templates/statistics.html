@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CI/CD Statistics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        a {
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        input[type="date"] {
+            padding: 6px;
+            margin: 0 8px;
+        }
+
+        button {
+            padding: 6px 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        canvas {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>CI/CD Build Statistics</h1>
+    <a href="{{ url_for('routes.home') }}">← Back to Dashboard</a>
+
+    <form method="get" action="{{ url_for('routes.stats') }}">
+        <label>From:</label>
+        <input type="date" name="start" value="{{ request.args.get('start', '') }}">
+        <label>To:</label>
+        <input type="date" name="end" value="{{ request.args.get('end', '') }}">
+        <button type="submit">Filter</button>
+    </form>
+
+    <p><strong>Total Builds:</strong> {{ total | int }}</p>
+    <p><strong>Successful:</strong> {{ success | int }}</p>
+    <p><strong>Failed:</strong> {{ failed | int }}</p>
+    <p><strong>Manually Triggered:</strong> {{ triggered | int }}</p>
+
+    <canvas id="buildChart" width="400" height="200"></canvas>
+
+    <h2>Recent Builds</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Workflow</th>
+                <th>Run ID</th>
+                <th>Status</th>
+                <th>Conclusion</th>
+                <th>Triggered By</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for build in builds %}
+            <tr>
+                <td>{{ build.workflow_name | default('N/A') }}</td>
+                <td>{{ build.run_id | default('N/A') }}</td>
+                <td>{{ build.status | default('N/A') }}</td>
+                <td>{{ build.conclusion | default('N/A') }}</td>
+                <td>{{ build.triggered_by | default('N/A') }}</td>
+                <td>{{ build.created_at | default('N/A') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        const ctx = document.getElementById('buildChart').getContext('2d');
+        const buildChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Success', 'Failed'],
+                datasets: [{
+                    label: 'Build Count',
+                    data: [{{ success | int }}, {{ failed | int }}],
+                    backgroundColor: ['#28a745', '#dc3545'],
+                    borderColor: ['#218838', '#c82333'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+
